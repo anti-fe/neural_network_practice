@@ -1,5 +1,7 @@
 import numpy as np
+import os
 
+from part1_mlp.app.exceptions import WeightFileError
 from part1_mlp.app.manager import DatasetManager
 from part1_mlp.app.models import NeuralNetwork
 
@@ -26,6 +28,12 @@ def main():
         [2, 4, 2],
         learning_rate=0.1,
     )
+    # Определяем путь к файлу сохранённых весов
+    weights_path = os.path.join(
+        "part1_mlp",
+        "weights",
+        "xor_model.npy",
+    )
     # Обучаем сеть на XOR-данных.
     loss_history = network.train(
         x,
@@ -33,19 +41,32 @@ def main():
         epochs=5000,
         batch_size=2,
     )
-    # Получаем предсказания обученной сети
-    predictions = network.predict(x)
-    # Оцениваем точность модели
-    accuracy = network.evaluate(x, y)
-    # Выводим начальную ошибку
-    print(f"Loss before: {loss_history[0]}")
-    # Выводим конечную ошибку
-    print(f"Loss after: {loss_history[-1]}")
-    # Выводим предсказанные классы
-    print(f"Predictions: {predictions}")
-    # Выводим точность модели
-    print(f"Accuracy: {accuracy * 100:.2f}%")
+    # Сохраняем обученную модель в файл
+    network.save_weights(weights_path)
+    print(f"Weights saved: {weights_path}")
 
+    predictions = network.predict(x)
+    accuracy = network.evaluate(x, y)
+    print(f"Loss before: {loss_history[0]}")
+    print(f"Loss after: {loss_history[-1]}")
+    print(f"Predictions: {predictions}")
+    print(f"Accuracy: {accuracy * 100:.2f}%")
+def save_weights(self, file_path):
+    # Сохраняем веса модели в файл
+    try:
+        np.save(
+            file_path,
+            {
+                "weights": self.weights,
+                "biases": self.biases,
+            },
+            allow_pickle=True,
+        )
+
+    except Exception as error:
+        raise WeightFileError(
+            f"Ошибка сохранения weights: {error}"
+        ) from error
 
 if __name__ == "__main__":
     # Запускаем основной сценарий программы
