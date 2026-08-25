@@ -167,3 +167,22 @@ class NeuralNetwork:
         self.weights = data["weights"]
         # Восстанавливаем смещения нейронной сети
         self.biases = data["biases"]
+    # Метод для оценки точности (в процентах) нейросети на тестовых данных
+    def evaluate(self, x, y_true):
+        # Получаем предсказанные классы для тестовых данных.
+        predictions = self.predict(x)
+
+        # Если y_true представлен в one-hot формате, преобразуем его обратно в номера классов
+        if y_true.ndim > 1:
+            true_classes = np.argmax(y_true, axis=1)
+        else:
+            true_classes = y_true
+
+        # Считаем количество правильных предсказаний
+        correct = np.sum(predictions == true_classes)
+        # Вычисляем общее количество объектов
+        total = len(true_classes)
+        # Вычисляем точность модели
+        accuracy = correct / total
+        # Возвращаем accuracy
+        return accuracy
