@@ -1,6 +1,12 @@
 import numpy as np
+import os
 
-from part1_mlp.app.exceptions import InvalidLayerSizeError
+from part1_mlp.app.exceptions import (
+    InvalidLayerSizeError,
+    MismatchedDataError,
+    ModelNotInitializedError,
+    WeightFileError,
+)
 
 class NeuralNetwork:
     def __init__(self, layer_sizes, learning_rate=0.01):
@@ -162,6 +168,11 @@ class NeuralNetwork:
         return self.loss_history
     # Метод для получения результата от уже обученной нейросети
     def predict(self, x):
+        # Проверяем, что модель содержит веса.
+        if not self.weights or not self.biases:
+            raise ModelNotInitializedError(
+                "Модель не была инициализирована весами"
+            )
         # Передаём входные данные через нейросеть
         predictions, _ = self.forward(x)
         # Для каждого объекта выбираем класс с максимальной вероятностью
@@ -180,14 +191,36 @@ class NeuralNetwork:
         )
     # Метод для загрузки весов и смещений нейросети из файла
     def load_weights(self, file_path):
-        data = np.load(
-            file_path,
-            allow_pickle=True,
-        ).item()
-        # Восстанавливаем веса нейронной сети
-        self.weights = data["weights"]
-        # Восстанавливаем смещения нейронной сети
-        self.biases = data["biases"]
+        if not os.path.isfile(file_path):
+            raise WeightFileError(
+                f"Weight file not found: {file_path}"
+            )
+
+        try:
+            data = np.load(
+                file_path,
+                allow_pickle=True,
+            ).item()
+            # Проверяем наличие весов
+            if "weights" not in data:
+                raise WeightFileError(
+                    "Weight file does not contain weights"
+                )
+            # Проверяем наличие смещений
+            if "biases" not in data:
+                raise WeightFileError(
+                    "Weight file does not contain biases"
+                )
+            # Восстанавливаем веса нейронной сети
+            self.weights = data["weights"]
+            # Восстанавливаем смещения нейронной сети
+            self.biases = data["biases"]
+        except WeightFileError:
+            raise
+        except Exception as error:
+            raise WeightFileError(
+                f"Ошибка загрузки weights: {error}"
+            ) from error
     # Метод для оценки точности (в процентах) нейросети на тестовых данных
     def evaluate(self, x, y_true):
         # Получаем предсказанные классы для тестовых данных.
