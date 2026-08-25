@@ -29,22 +29,24 @@ def parse_args():
 def main():
     # Получаем параметры из командной строки
     args = parse_args()
-    # Создаём небольшой XOR-датасет для проверки всей системы
-    x = np.array([
-        [0.0, 0.0],
-        [0.0, 1.0],
-        [1.0, 0.0],
-        [1.0, 1.0],
-    ])
-
-    # Создаём правильные ответы в one-hot формате
-    y = np.array([
-        [1.0, 0.0],
-        [0.0, 1.0],
-        [0.0, 1.0],
-        [1.0, 0.0],
-    ])
-
+    # Создаём менеджер для работы с датасетом
+    manager = DatasetManager()
+    # Определяем путь к CSV-файлу
+    dataset_path = os.path.join(
+        "part1_mlp",
+        "data",
+        "xor.csv",
+    )
+    # Загружаем признаки и целевые значения из CSV
+    x, y = manager.load_csv(
+        dataset_path,
+        "class",
+    )
+    # Преобразуем целевые значения в one-hot формат
+    y = manager.to_one_hot(
+        y,
+        num_classes=2,
+    )
     # Создаём нейронную сеть
     network = NeuralNetwork(
         [2, 4, 2],
