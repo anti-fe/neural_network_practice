@@ -1,12 +1,34 @@
 import numpy as np
 import os
+import argparse
 
 from part1_mlp.app.exceptions import WeightFileError
 from part1_mlp.app.manager import DatasetManager
 from part1_mlp.app.models import NeuralNetwork
 
-
+def parse_args():
+    # Создаём парсер аргументов командной строки
+    parser = argparse.ArgumentParser(
+        description="Обучите простую нейронную сеть MLP"
+    )
+    # Добавляем количество эпох обучения
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=5000,
+        help="Number of training epochs",
+    )
+    # Добавляем скорость обучения
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=0.1,
+        help="Learning rate",
+    )
+    return parser.parse_args()
 def main():
+    # Получаем параметры из командной строки
+    args = parse_args()
     # Создаём небольшой XOR-датасет для проверки всей системы
     x = np.array([
         [0.0, 0.0],
@@ -26,7 +48,7 @@ def main():
     # Создаём нейронную сеть
     network = NeuralNetwork(
         [2, 4, 2],
-        learning_rate=0.1,
+        learning_rate=args.learning_rate,
     )
     # Определяем путь к файлу сохранённых весов
     weights_path = os.path.join(
@@ -45,7 +67,7 @@ def main():
         loss_history = network.train(
             x,
             y,
-            epochs=5000,
+            epochs=args.epochs,
             batch_size=2,
         )
         print(f"Loss before: {loss_history[0]}")
