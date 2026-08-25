@@ -1,7 +1,28 @@
 import numpy as np
 
+from part1_mlp.app.exceptions import InvalidLayerSizeError
+
 class NeuralNetwork:
     def __init__(self, layer_sizes, learning_rate=0.01):
+        # Проверяем, что архитектура сети задана в виде списка или кортежа
+        if not isinstance(layer_sizes, (list, tuple)):
+            raise InvalidLayerSizeError(
+                "layer_sizes должен быть list или tuple"
+            )
+        # Проверяем, что указано минимум два слоя: входной и выходной
+        if len(layer_sizes) < 2:
+            raise InvalidLayerSizeError(
+                "Neural network должен содержать как минимум два слоя"
+            )
+        # Проверяем, что размер каждого слоя является положительным числом.
+        if any(
+            not isinstance(size, int) or size <= 0
+            for size in layer_sizes
+        ):
+            raise InvalidLayerSizeError(
+                "Layer sizes должны быть положительными целыми числами"
+            )
+        
         # Архитектура сети [.., .., ..]
         self.layer_sizes = layer_sizes
         # Cкорость обучения
