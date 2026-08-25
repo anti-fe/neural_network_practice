@@ -110,21 +110,34 @@ class NeuralNetwork:
             # Обновляем смещения
             self.biases[i] -= self.learning_rate * bias_gradient
     # Метод для обучения нейросети на предоставленных данных
-    def train(self, x, y_true, epochs=1000):
+    def train(self, x, y_true, epochs=1000, batch_size=32):
         # Очищаем историю ошибки перед новым обучением
         self.loss_history = []
-
-        # Повторяем обучение указанное количество эпох
+        # Получаем количество объектов в датасете
+        data_size = x.shape[0]
+        # Запускаем обучение на заданное количество эпох
         for epoch in range(epochs):
-            # Выполняем прямое распространение данных через сеть
-            predictions, activations = self.forward(x)
-            # Вычисляем ошибку текущего предсказания.
-            loss = self.cross_entropy_loss(y_true, predictions)
-            # Сохраняем значение ошибки для последующего анализа
+            # Перемешиваем индексы объектов перед каждой эпохой
+            indices = np.random.permutation(data_size)
+            # Разбиваем датасет на небольшие batch
+            for start in range(0, data_size, batch_size):
+                # Определяем конец текущего batch
+                end = start + batch_size
+                # Получаем индексы текущего batch
+                batch_indices = indices[start:end]
+                # Получаем входные данные текущего batch
+                x_batch = x[batch_indices]
+                # Получаем правильные ответы текущего batch
+                y_batch = y_true[batch_indices]
+                # Выполняем прямое распространение
+                predictions, activations = self.forward(x_batch)
+                # Вычисляем ошибку текущего batch
+                loss = self.cross_entropy_loss(y_batch, predictions)
+                # Выполняем обратное распространение и обновляем веса
+                self.backward(x_batch, y_batch, activations)
+            # После завершения эпохи сохраняем её итоговую ошибку
             self.loss_history.append(loss)
-            # Выполняем обратное распространение ошибки и обновляем веса и смещения
-            self.backward(x, y_true, activations)
-        # Возвращаем историю ошибки после завершения обучения
+        # Возвращаем историю обучения
         return self.loss_history
     # Метод для получения результата от уже обученной нейросети
     def predict(self, x):
