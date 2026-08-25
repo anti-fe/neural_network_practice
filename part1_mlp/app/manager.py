@@ -66,3 +66,20 @@ class DatasetManager:
 
         # Возвращаем четыре части датасета
         return x_train, x_test, y_train, y_test
+    # Метод, который преобразует номера классов в формат, который понимает наша нейросеть
+    def to_one_hot(self, y, num_classes=None):
+            # Преобразуем входные классы в целочисленный NumPy-массив
+            y = np.asarray(y, dtype=int)
+
+            if num_classes is None:
+                num_classes = np.max(y) + 1
+
+            # Создаём матрицу нулей
+            one_hot = np.zeros(
+                (len(y), num_classes),
+                dtype=float
+            )
+            # Для каждого объекта устанавливаем 1 в столбце соответствующего класса
+            one_hot[np.arange(len(y)), y] = 1.0
+            # Возвращаем one-hot представление классов
+            return one_hot
