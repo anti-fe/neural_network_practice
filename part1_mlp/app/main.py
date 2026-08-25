@@ -1,8 +1,6 @@
-import numpy as np
 import os
 import argparse
 
-from part1_mlp.app.exceptions import WeightFileError
 from part1_mlp.app.manager import DatasetManager
 from part1_mlp.app.models import NeuralNetwork
 
@@ -93,22 +91,6 @@ def main():
     # Выводим предсказания и точность
     print(f"Predictions: {predictions}")
     print(f"Accuracy: {accuracy * 100:.2f}%")
-def save_weights(self, file_path):
-    # Сохраняем веса модели в файл
-    try:
-        np.save(
-            file_path,
-            {
-                "weights": self.weights,
-                "biases": self.biases,
-            },
-            allow_pickle=True,
-        )
-
-    except Exception as error:
-        raise WeightFileError(
-            f"Ошибка сохранения weights: {error}"
-        ) from error
 
 if __name__ == "__main__":
     # Запускаем основной сценарий программы
