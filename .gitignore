@@ -1,0 +1,35 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Generated neural network weights
+part1_mlp/weights/*
+
+# Keep the weights directory in Git
+!part1_mlp/weights/.gitkeep
+
+# Local datasets
+# Раскомментируй, если датасеты не должны храниться в Git
+# part1_mlp/data/*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
