@@ -47,6 +47,13 @@ def main():
         y,
         num_classes=2,
     )
+    # Разделяем датасет на обучающую и тестовую выборки
+    x_train, x_test, y_train, y_test = manager.train_test_split(
+        x,
+        y,
+        test_size=0.25,
+        shuffle=True,
+    )
     # Создаём нейронную сеть
     network = NeuralNetwork(
         [2, 4, 2],
@@ -65,10 +72,10 @@ def main():
         print("Weights loaded")
         loss_history = None
     else:
-        # Обучаем нейронную сеть, если сохранённых весов нет
+        # Обучаем нейронную сеть только на обучающей выборке
         loss_history = network.train(
-            x,
-            y,
+            x_train,
+            y_train,
             epochs=args.epochs,
             batch_size=2,
         )
@@ -77,10 +84,11 @@ def main():
         # Сохраняем обученные веса
         network.save_weights(weights_path)
         print("Weights saved")
-    # Получаем предсказания обученной или загруженной модели
-    predictions = network.predict(x)
-    # Оцениваем точность модели на тестовых данных
-    accuracy = network.evaluate(x, y)
+    # Получаем предсказания на тестовой выборке
+    predictions = network.predict(x_test)
+    # Оцениваем модель на данных, которые не использовались при обучении
+    accuracy = network.evaluate(x_test, y_test)
+    # Выводим предсказания и точность
     print(f"Predictions: {predictions}")
     print(f"Accuracy: {accuracy * 100:.2f}%")
 def save_weights(self, file_path):
