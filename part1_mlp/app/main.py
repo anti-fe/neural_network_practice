@@ -34,21 +34,29 @@ def main():
         "weights",
         "xor_model.npy",
     )
-    # Обучаем сеть на XOR-данных.
-    loss_history = network.train(
-        x,
-        y,
-        epochs=5000,
-        batch_size=2,
-    )
-    # Сохраняем обученную модель в файл
-    network.save_weights(weights_path)
-    print(f"Weights saved: {weights_path}")
-
+    # Проверяем, существует ли уже сохранённая модель
+    if os.path.isfile(weights_path):
+        # Загружаем ранее обученные веса
+        network.load_weights(weights_path)
+        print("Weights loaded")
+        loss_history = None
+    else:
+        # Обучаем нейронную сеть, если сохранённых весов нет
+        loss_history = network.train(
+            x,
+            y,
+            epochs=5000,
+            batch_size=2,
+        )
+        print(f"Loss before: {loss_history[0]}")
+        print(f"Loss after: {loss_history[-1]}")
+        # Сохраняем обученные веса
+        network.save_weights(weights_path)
+        print("Weights saved")
+    # Получаем предсказания обученной или загруженной модели
     predictions = network.predict(x)
+    # Оцениваем точность модели на тестовых данных
     accuracy = network.evaluate(x, y)
-    print(f"Loss before: {loss_history[0]}")
-    print(f"Loss after: {loss_history[-1]}")
     print(f"Predictions: {predictions}")
     print(f"Accuracy: {accuracy * 100:.2f}%")
 def save_weights(self, file_path):
