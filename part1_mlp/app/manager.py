@@ -8,6 +8,7 @@ from part1_mlp.app.exceptions import (
     DatasetError,
     MismatchedDataError,
 )
+from part1_mlp.app.utils import validate_test_size, validate_data
 
 class DatasetManager:
     def __init__(self):
@@ -59,6 +60,8 @@ class DatasetManager:
         # Возвращаем нормализованные данные
         return normalized_x
     def train_test_split(self, x, y, test_size=0.2, shuffle=True):
+        validate_test_size(test_size)
+        validate_data(x, y)
         # Проверяем, что test_size находится в допустимом диапазоне
         if not 0 < test_size < 1:
             raise ValueError("test_size должен быть между 0 и 1")

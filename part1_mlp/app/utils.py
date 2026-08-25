@@ -2,6 +2,7 @@ import numpy as np
 import json
 
 from part1_mlp.app.exceptions import MismatchedDataError
+from part1_mlp.app.exceptions import InvalidInputError
 
 def validate_data(x, y):
     # Проверяем, что входные данные являются NumPy-массивами.
@@ -41,3 +42,18 @@ def load_loss_history(file_path):
 
     # Возвращаем загруженную историю.
     return history
+def validate_test_size(test_size):
+    if not isinstance(test_size, (int, float)):
+        raise InvalidInputError(
+            "test_size должен быть числом"
+        )
+    if not 0 < test_size < 1:
+        raise InvalidInputError(
+            "test_size должен находиться между 0 и 1"
+        )
+def validate_data(x, y):
+    # Проверяем, что количество объектов X и Y совпадает
+    if len(x) != len(y):
+        raise MismatchedDataError(
+            "x и y должны содержать одно и то же количество образцов"
+        )
