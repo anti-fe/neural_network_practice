@@ -42,6 +42,8 @@ def main():
         dataset_path,
         "class",
     )
+    # Нормализуем входные признаки перед обучением
+    x = manager.normalize(x)
     # Преобразуем целевые значения в one-hot формат
     y = manager.to_one_hot(
         y,
