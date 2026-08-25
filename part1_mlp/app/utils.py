@@ -1,6 +1,8 @@
 import numpy as np
 import json
 
+from part1_mlp.app.exceptions import MismatchedDataError
+
 def validate_data(x, y):
     # Проверяем, что входные данные являются NumPy-массивами.
     if not isinstance(x, np.ndarray):
@@ -12,7 +14,7 @@ def validate_data(x, y):
 
     # Проверяем, что количество объектов совпадает.
     if len(x) != len(y):
-        raise ValueError("x и y должны содержать одно и то же количество образцов")
+        raise MismatchedDataError("x и y должны содержать одно и то же количество образцов")
 
     # Проверяем, что входные данные не пустые.
     if x.size == 0:

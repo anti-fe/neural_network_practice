@@ -1,6 +1,13 @@
 import numpy as np
 import pandas as pd
+import os
 
+# Импортируем собственные исключения проекта.
+from part1_mlp.app.exceptions import (
+    DatasetFileNotFoundError,
+    DatasetError,
+    MismatchedDataError,
+)
 
 class DatasetManager:
     def __init__(self):
@@ -9,24 +16,37 @@ class DatasetManager:
         # Правильные ответы
         self.y = None
     def load_csv(self, file_path, target_column):
-        # Загружаем CSV-файл
-        data = pd.read_csv(file_path)
-        # Проверяем, что указанный столбец существует
-        if target_column not in data.columns:
-            raise ValueError(
-                f"Указанный столбец '{target_column}' не найденен"
+        # Проверяем, существует ли файл датасета.
+        if not os.path.isfile(file_path):
+            raise DatasetFileNotFoundError(
+                f"Dataset file not found: {file_path}"
             )
-        # Получаем все столбцы, кроме целевого
-        feature_columns = [
-            column for column in data.columns
-            if column != target_column
-        ]
-        # Преобразуем признаки в NumPy-массив
-        self.x = data[feature_columns].to_numpy(dtype=float)
-        # Преобразуем целевой столбец в NumPy-массив
-        self.y = data[target_column].to_numpy()
-        # Возвращаем подготовленные данные
-        return self.x, self.y
+        try:
+            # Загружаем CSV-файл
+            data = pd.read_csv(file_path)
+            # Проверяем, что указанный столбец существует
+            if target_column not in data.columns:
+                raise ValueError(
+                    f"Указанный столбец '{target_column}' не найденен"
+                )
+            # Получаем все столбцы, кроме целевого
+            feature_columns = [
+                column for column in data.columns
+                if column != target_column
+            ]
+            # Преобразуем признаки в NumPy-массив
+            self.x = data[feature_columns].to_numpy(dtype=float)
+            # Преобразуем целевой столбец в NumPy-массив
+            self.y = data[target_column].to_numpy()
+            # Возвращаем подготовленные данные
+            return self.x, self.y
+        except DatasetError:
+            raise
+        except Exception as error:
+            # Преобразуем неизвестную ошибку в собственное исключение
+            raise DatasetError(
+                f"Ошибка загрузки dataset: {error}"
+            ) from error
     def normalize(self, x):
         # Вычисляем среднее значение каждого признака
         mean = np.mean(x, axis=0)
