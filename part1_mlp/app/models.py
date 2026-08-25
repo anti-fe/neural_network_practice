@@ -34,15 +34,29 @@ class NeuralNetwork:
     def relu(x):
         # Возвращает 0 для отрицательных значений или само значение для положительных.
         return np.maximum(0, x)
-
     @staticmethod
+    # Метод для сравнения предсказания сети с правильным ответом и отображения, насколько сеть ошиблась
+    def cross_entropy_loss(y_true, y_pred):
+        # Добавляем маленькое число, чтобы избежать log(0).
+        epsilon = 1e-12
+
+        # Ограничиваем вероятности безопасным диапазоном.
+        y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
+
+        # Вычисляем cross-entropy для каждого объекта.
+        loss = -np.sum(y_true * np.log(y_pred), axis=1)
+
+        # Возвращаем среднюю ошибку по всему batch.
+        return np.mean(loss)
+    @staticmethod
+    # Метод для превращения выходных значений нейросети в вероятности классов
     def softmax(x):
         # Вычитаем максимальное значение для численной стабильности.
         exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
 
         # Преобразуем значения в вероятности.
         return exp_x / np.sum(exp_x, axis=1, keepdims=True)
-
+    # Метод для проведения входных данных через всю нейросеть вперёд и получения предсказания.
     def forward(self, x):
         activation = x
 
@@ -59,5 +73,5 @@ class NeuralNetwork:
 
         # Используем Softmax, чтобы получить вероятности классов.
         output = self.softmax(z)
-        
+
         return output
