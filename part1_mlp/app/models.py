@@ -58,20 +58,54 @@ class NeuralNetwork:
         return exp_x / np.sum(exp_x, axis=1, keepdims=True)
     # Метод для проведения входных данных через всю нейросеть вперёд и получения предсказания.
     def forward(self, x):
+        # Сохраняем активации всех слоёв
+        activations = [x]
+        # Начинаем с входных данных
         activation = x
 
-        # Проходим по всем слоям кроме последнего.
+        # Обрабатываем скрытые слои
         for i in range(len(self.weights) - 1):
-            # Вычисляем линейную комбинацию: Z = X * W + B.
+            # Линейная комбинация входов, весов и смещений
             z = np.dot(activation, self.weights[i]) + self.biases[i]
-
-            # Применяем ReLU к результату.
+            # Применяем функцию активации ReLU
             activation = self.relu(z)
 
-        # Обрабатываем последний слой отдельно.
+            # Сохраняем результат слоя для backpropagation
+            activations.append(activation)
+
+        # Вычисляем значение последнего слоя
         z = np.dot(activation, self.weights[-1]) + self.biases[-1]
-
-        # Используем Softmax, чтобы получить вероятности классов.
+        # Применяем Softmax для получения вероятностей
         output = self.softmax(z)
+        # Сохраняем выходной слой
+        activations.append(output)
 
-        return output
+        # Возвращаем и результат, и промежуточные значения
+        return output, activations
+    # Метод, который обучает нейросеть, изменяя её веса на основе ошибки
+    def backward(self, x, y_true, activations):
+        # Количество объектов в текущем batch
+        batch_size = x.shape[0]
+
+        # Ошибка на текущем слое, которую нужно передать назад
+        layer_error = activations[-1] - y_true
+
+        # Проходим по слоям в обратном направлении
+        for i in reversed(range(len(self.weights))):
+            # Получаем активацию предыдущего слоя
+            previous_activation = activations[i]
+            # Вычисляем градиент весов.
+            weight_gradient = np.dot(previous_activation.T, layer_error) / batch_size
+            # Вычисляем градиент смещений.
+            bias_gradient = np.sum(layer_error, axis=0, keepdims=True) / batch_size
+
+            # Передаём ошибку на предыдущий слой
+            if i > 0:
+                # Распространяем ошибку назад через веса
+                previous_layer_error = np.dot(layer_error, self.weights[i].T)
+                # Применяем производную ReLU.
+                layer_error = previous_layer_error * (activations[i] > 0)
+            # Обновляем веса
+            self.weights[i] -= self.learning_rate * weight_gradient
+            # Обновляем смещения
+            self.biases[i] -= self.learning_rate * bias_gradient
