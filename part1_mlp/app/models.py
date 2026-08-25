@@ -109,3 +109,20 @@ class NeuralNetwork:
             self.weights[i] -= self.learning_rate * weight_gradient
             # Обновляем смещения
             self.biases[i] -= self.learning_rate * bias_gradient
+    # Метод для обучения нейросети на предоставленных данных
+    def train(self, x, y_true, epochs=1000):
+        # Очищаем историю ошибки перед новым обучением
+        self.loss_history = []
+
+        # Повторяем обучение указанное количество эпох
+        for epoch in range(epochs):
+            # Выполняем прямое распространение данных через сеть
+            predictions, activations = self.forward(x)
+            # Вычисляем ошибку текущего предсказания.
+            loss = self.cross_entropy_loss(y_true, predictions)
+            # Сохраняем значение ошибки для последующего анализа
+            self.loss_history.append(loss)
+            # Выполняем обратное распространение ошибки и обновляем веса и смещения
+            self.backward(x, y_true, activations)
+        # Возвращаем историю ошибки после завершения обучения
+        return self.loss_history
