@@ -126,3 +126,11 @@ class NeuralNetwork:
             self.backward(x, y_true, activations)
         # Возвращаем историю ошибки после завершения обучения
         return self.loss_history
+    # Метод для получения результата от уже обученной нейросети
+    def predict(self, x):
+        # Передаём входные данные через нейросеть
+        predictions, _ = self.forward(x)
+        # Для каждого объекта выбираем класс с максимальной вероятностью
+        predicted_classes = np.argmax(predictions, axis=1)
+        # Возвращаем номера предсказанных классов
+        return predicted_classes
