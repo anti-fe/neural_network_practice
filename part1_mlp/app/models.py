@@ -147,3 +147,23 @@ class NeuralNetwork:
         predicted_classes = np.argmax(predictions, axis=1)
         # Возвращаем номера предсказанных классов
         return predicted_classes
+    # Метод для сохранения весов и смещений нейросети в файл
+    def save_weights(self, file_path):
+        np.save(
+            file_path,
+            {
+                "weights": self.weights,
+                "biases": self.biases,
+            },
+            allow_pickle=True,
+        )
+    # Метод для загрузки весов и смещений нейросети из файла
+    def load_weights(self, file_path):
+        data = np.load(
+            file_path,
+            allow_pickle=True,
+        ).item()
+        # Восстанавливаем веса нейронной сети
+        self.weights = data["weights"]
+        # Восстанавливаем смещения нейронной сети
+        self.biases = data["biases"]
