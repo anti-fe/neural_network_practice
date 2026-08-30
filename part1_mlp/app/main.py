@@ -5,6 +5,7 @@ from part1_mlp.app.manager import DatasetManager
 from part1_mlp.app.models import NeuralNetwork
 
 def parse_args():
+    """Функция для парсинга аргументов командной строки"""
     # Создаём парсер аргументов командной строки
     parser = argparse.ArgumentParser(
         description="Обучите простую нейронную сеть MLP"
@@ -25,6 +26,7 @@ def parse_args():
     )
     return parser.parse_args()
 def main():
+    """Основная функция для запуска обучения нейронной сети"""
     # Получаем параметры из командной строки
     args = parse_args()
     # Создаём менеджер для работы с датасетом

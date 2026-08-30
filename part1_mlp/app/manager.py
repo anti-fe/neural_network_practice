@@ -17,6 +17,7 @@ class DatasetManager:
         # Правильные ответы
         self.y = None
     def load_csv(self, file_path, target_column):
+        """Метод для загрузки данных из CSV-файла"""
         # Проверяем, существует ли файл датасета.
         if not os.path.isfile(file_path):
             raise DatasetFileNotFoundError(
@@ -49,6 +50,7 @@ class DatasetManager:
                 f"Ошибка загрузки dataset: {error}"
             ) from error
     def normalize(self, x):
+        """Метод для нормализации входных данных"""
         # Вычисляем среднее значение каждого признака
         mean = np.mean(x, axis=0)
         # Вычисляем стандартное отклонение каждого признака
@@ -60,6 +62,7 @@ class DatasetManager:
         # Возвращаем нормализованные данные
         return normalized_x
     def train_test_split(self, x, y, test_size=0.2, shuffle=True):
+        """Метод для разделения датасета на обучающую и тестовую выборки"""
         validate_test_size(test_size)
         validate_data(x, y)
         # Проверяем, что test_size находится в допустимом диапазоне
@@ -89,8 +92,9 @@ class DatasetManager:
 
         # Возвращаем четыре части датасета
         return x_train, x_test, y_train, y_test
-    # Метод, который преобразует номера классов в формат, который понимает наша нейросеть
+    
     def to_one_hot(self, y, num_classes=None):
+            """Метод, который преобразует номера классов в формат, который понимает наша нейросеть"""
             # Преобразуем входные классы в целочисленный NumPy-массив
             y = np.asarray(y, dtype=int)
 

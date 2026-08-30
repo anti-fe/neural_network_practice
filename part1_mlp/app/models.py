@@ -42,8 +42,8 @@ class NeuralNetwork:
         # Инициализация весов и смещений
         self._initialize_weights()
 
-    # Метод для инициализации весов и смещений
     def _initialize_weights(self):
+        """Метод для инициализации весов и смещений"""
         # Инициализация весов и смещений для каждого слоя сети
         for i in range(len(self.layer_sizes) - 1):
             # Количество нейронов в текущем слое
@@ -59,11 +59,11 @@ class NeuralNetwork:
             self.biases.append(biases)
     @staticmethod
     def relu(x):
-        # Возвращает 0 для отрицательных значений или само значение для положительных.
+        """Возвращает 0 для отрицательных значений или само значение для положительных."""
         return np.maximum(0, x)
     @staticmethod
-    # Метод для сравнения предсказания сети с правильным ответом и отображения, насколько сеть ошиблась
     def cross_entropy_loss(y_true, y_pred):
+        """Метод для сравнения предсказания сети с правильным ответом и отображения, насколько сеть ошиблась"""
         # Добавляем маленькое число, чтобы избежать log(0).
         epsilon = 1e-12
         # Ограничиваем вероятности безопасным диапазоном.
@@ -73,15 +73,15 @@ class NeuralNetwork:
         # Возвращаем среднюю ошибку по всему batch.
         return np.mean(loss)
     @staticmethod
-    # Метод для превращения выходных значений нейросети в вероятности классов
     def softmax(x):
+        """Метод для превращения выходных значений нейросети в вероятности классов"""
         # Вычитаем максимальное значение для численной стабильности.
         exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
 
         # Преобразуем значения в вероятности.
         return exp_x / np.sum(exp_x, axis=1, keepdims=True)
-    # Метод для проведения входных данных через всю нейросеть вперёд и получения предсказания.
     def forward(self, x):
+        """Метод для проведения входных данных через всю нейросеть вперёд и получения предсказания"""
         # Сохраняем активации всех слоёв
         activations = [x]
         # Начинаем с входных данных
@@ -106,8 +106,8 @@ class NeuralNetwork:
 
         # Возвращаем и результат, и промежуточные значения
         return output, activations
-    # Метод, который обучает нейросеть, изменяя её веса на основе ошибки
     def backward(self, x, y_true, activations):
+        """Метод, который обучает нейросеть, изменяя её веса на основе ошибки"""
         # Количество объектов в текущем batch
         batch_size = x.shape[0]
 
@@ -133,8 +133,8 @@ class NeuralNetwork:
             self.weights[i] -= self.learning_rate * weight_gradient
             # Обновляем смещения
             self.biases[i] -= self.learning_rate * bias_gradient
-    # Метод для обучения нейросети на предоставленных данных
     def train(self, x, y_true, epochs=1000, batch_size=32):
+        """Метод для обучения нейросети на предоставленных данных"""
         # Очищаем историю ошибки перед новым обучением
         self.loss_history = []
         # Получаем количество объектов в датасете
@@ -163,8 +163,8 @@ class NeuralNetwork:
             self.loss_history.append(loss)
         # Возвращаем историю обучения
         return self.loss_history
-    # Метод для получения результата от уже обученной нейросети
     def predict(self, x):
+        """Метод для получения результата от уже обученной нейросети"""
         # Проверяем, что модель содержит веса.
         if not self.weights or not self.biases:
             raise ModelNotInitializedError(
@@ -176,8 +176,8 @@ class NeuralNetwork:
         predicted_classes = np.argmax(predictions, axis=1)
         # Возвращаем номера предсказанных классов
         return predicted_classes
-    # Метод для сохранения весов и смещений нейросети в файл
     def save_weights(self, file_path):
+        """Метод для сохранения весов и смещений нейросети в файл"""
         np.save(
             file_path,
             {
@@ -186,8 +186,8 @@ class NeuralNetwork:
             },
             allow_pickle=True,
         )
-    # Метод для загрузки весов и смещений нейросети из файла
     def load_weights(self, file_path):
+        """Метод для загрузки весов и смещений нейросети из файла"""
         if not os.path.isfile(file_path):
             raise WeightFileError(
                 f"Weight file не найден: {file_path}"
@@ -218,8 +218,8 @@ class NeuralNetwork:
             raise WeightFileError(
                 f"Ошибка загрузки weights: {error}"
             ) from error
-    # Метод для оценки точности (в процентах) нейросети на тестовых данных
     def evaluate(self, x, y_true):
+        """Метод для оценки точности (в процентах) нейросети на тестовых данных"""
         # Получаем предсказанные классы для тестовых данных.
         predictions = self.predict(x)
 
