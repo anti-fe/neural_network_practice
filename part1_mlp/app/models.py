@@ -9,7 +9,7 @@ from part1_mlp.app.exceptions import (
 )
 
 class NeuralNetwork:
-    def __init__(self, layer_sizes, learning_rate=0.01):
+    def __init__(self, layer_sizes, learning_rate=0.01, activation="relu"):
         # Проверяем, что архитектура сети задана в виде списка или кортежа
         if not isinstance(layer_sizes, (list, tuple)):
             raise InvalidLayerSizeError(
@@ -28,11 +28,17 @@ class NeuralNetwork:
             raise InvalidLayerSizeError(
                 "Layer sizes должны быть положительными целыми числами"
             )
-        
+        # Проверяем допустимую функцию активации.
+        if activation not in ("relu", "sigmoid"):
+            raise ValueError(
+                "Функция активации должна быть relu или sigmoid"
+            )
         # Архитектура сети [.., .., ..]
         self.layer_sizes = layer_sizes
         # Cкорость обучения
         self.learning_rate = learning_rate
+        # Выбранная функция активации
+        self.activation = activation
         # Матрицы весов
         self.weights = []
         # Смещения нейронов
@@ -61,6 +67,10 @@ class NeuralNetwork:
     def relu(x):
         """Возвращает 0 для отрицательных значений или само значение для положительных."""
         return np.maximum(0, x)
+    def sigmoid(self, x):
+        """Метод для вычисления сигмоидальной функции активации"""
+        # Вычисляем сигмоидальную функцию активации.
+        return 1 / (1 + np.exp(-x))
     @staticmethod
     def cross_entropy_loss(y_true, y_pred):
         """Метод для сравнения предсказания сети с правильным ответом и отображения, насколько сеть ошиблась"""
@@ -91,12 +101,13 @@ class NeuralNetwork:
         for i in range(len(self.weights) - 1):
             # Линейная комбинация входов, весов и смещений
             z = np.dot(activation, self.weights[i]) + self.biases[i]
-            # Применяем функцию активации ReLU
-            activation = self.relu(z)
-
-            # Сохраняем результат слоя для backpropagation
+             # Выбираем функцию активации скрытого слоя.
+            if self.activation == "relu":
+                activation = self.relu(z)
+            else:
+                activation = self.sigmoid(z)
+            # Сохраняем активацию текущего слоя
             activations.append(activation)
-
         # Вычисляем значение последнего слоя
         z = np.dot(activation, self.weights[-1]) + self.biases[-1]
         # Применяем Softmax для получения вероятностей
@@ -107,32 +118,49 @@ class NeuralNetwork:
         # Возвращаем и результат, и промежуточные значения
         return output, activations
     def backward(self, x, y_true, activations):
-        """Метод, который обучает нейросеть, изменяя её веса на основе ошибки"""
+        """Выполняет обратное распространение ошибки и обновляет веса."""
+
         # Количество объектов в текущем batch
         batch_size = x.shape[0]
-
-        # Ошибка на текущем слое, которую нужно передать назад
+        # Ошибка выходного слоя
         layer_error = activations[-1] - y_true
-
         # Проходим по слоям в обратном направлении
         for i in reversed(range(len(self.weights))):
             # Получаем активацию предыдущего слоя
             previous_activation = activations[i]
-            # Вычисляем градиент весов.
-            weight_gradient = np.dot(previous_activation.T, layer_error) / batch_size
-            # Вычисляем градиент смещений.
-            bias_gradient = np.sum(layer_error, axis=0, keepdims=True) / batch_size
-
-            # Передаём ошибку на предыдущий слой
+            # Вычисляем градиент весов
+            weight_gradient = (
+                np.dot(previous_activation.T, layer_error)
+                / batch_size
+            )
+            # Вычисляем градиент смещений
+            bias_gradient = (
+                np.sum(layer_error, axis=0, keepdims=True)
+                / batch_size
+            )
+            # Если это не первый слой, передаём ошибку на предыдущий слой
             if i > 0:
-                # Распространяем ошибку назад через веса
-                previous_layer_error = np.dot(layer_error, self.weights[i].T)
-                # Применяем производную ReLU.
-                layer_error = previous_layer_error * (activations[i] > 0)
+                # Распространяем ошибку через веса
+                previous_layer_error = np.dot(
+                    layer_error,
+                    self.weights[i].T
+                )
+                # Получаем активацию скрытого слоя.
+                hidden_activation = activations[i]
+                # Выбираем производную функции активации
+                if self.activation == "relu":
+                    activation_gradient = (hidden_activation > 0)
+                else:
+                    activation_gradient = (hidden_activation * (1 - hidden_activation))
+                # Получаем ошибку предыдущего слоя
+                layer_error = (
+                    previous_layer_error
+                    * activation_gradient
+                )
             # Обновляем веса
-            self.weights[i] -= self.learning_rate * weight_gradient
+            self.weights[i] -= (self.learning_rate * weight_gradient)
             # Обновляем смещения
-            self.biases[i] -= self.learning_rate * bias_gradient
+            self.biases[i] -= (self.learning_rate * bias_gradient)          
     def train(self, x, y_true, epochs=1000, batch_size=32):
         """Метод для обучения нейросети на предоставленных данных"""
         # Очищаем историю ошибки перед новым обучением
