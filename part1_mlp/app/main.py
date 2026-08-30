@@ -74,8 +74,8 @@ def main():
     else:
         # Обучаем нейронную сеть только на обучающей выборке
         loss_history = network.train(
-            x_train,
-            y_train,
+            x,
+            y,
             epochs=args.epochs,
             batch_size=2,
         )
@@ -85,9 +85,9 @@ def main():
         network.save_weights(weights_path)
         print("Weights saved")
     # Получаем предсказания на тестовой выборке
-    predictions = network.predict(x_test)
+    predictions = network.predict(x)
     # Оцениваем модель на данных, которые не использовались при обучении
-    accuracy = network.evaluate(x_test, y_test)
+    accuracy = network.evaluate(x, y)
     # Выводим предсказания и точность
     print(f"Predictions: {predictions}")
     print(f"Accuracy: {accuracy * 100:.2f}%")

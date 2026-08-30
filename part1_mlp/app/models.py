@@ -66,13 +66,10 @@ class NeuralNetwork:
     def cross_entropy_loss(y_true, y_pred):
         # Добавляем маленькое число, чтобы избежать log(0).
         epsilon = 1e-12
-
         # Ограничиваем вероятности безопасным диапазоном.
         y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-
         # Вычисляем cross-entropy для каждого объекта.
         loss = -np.sum(y_true * np.log(y_pred), axis=1)
-
         # Возвращаем среднюю ошибку по всему batch.
         return np.mean(loss)
     @staticmethod
@@ -193,7 +190,7 @@ class NeuralNetwork:
     def load_weights(self, file_path):
         if not os.path.isfile(file_path):
             raise WeightFileError(
-                f"Weight file not found: {file_path}"
+                f"Weight file не найден: {file_path}"
             )
 
         try:
@@ -204,12 +201,12 @@ class NeuralNetwork:
             # Проверяем наличие весов
             if "weights" not in data:
                 raise WeightFileError(
-                    "Weight file does not contain weights"
+                    "Weight file не содержит weights"
                 )
             # Проверяем наличие смещений
             if "biases" not in data:
                 raise WeightFileError(
-                    "Weight file does not contain biases"
+                    "Weight file не содержит biases"
                 )
             # Восстанавливаем веса нейронной сети
             self.weights = data["weights"]
