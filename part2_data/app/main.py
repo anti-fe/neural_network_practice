@@ -1,6 +1,10 @@
 import argparse
 import os
 
+from dotenv import load_dotenv
+
+# Загружаем переменные окружения из /.env
+load_dotenv()
 
 def parse_args():
     """Создаёт и обрабатывает аргументы командной строки."""
