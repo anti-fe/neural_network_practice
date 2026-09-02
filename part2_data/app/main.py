@@ -2,6 +2,8 @@ import argparse
 import os
 
 from dotenv import load_dotenv
+from .doctor import check_environment
+from .data_processor import find_data_files
 
 # Загружаем переменные окружения из /.env
 load_dotenv()
@@ -70,9 +72,19 @@ def main():
         print(f"Путь: {args.path}")
         print(f"Расширения: {args.ext}")
         print(f"Выходной файл: {args.output}")
+        # Ищем файлы с указанными расширениями
+        data_files = find_data_files(
+            args.path,
+            args.ext,
+        )
+        # Показываем сами файлы и их кол-во 
+        print(f"Найдено файлов: {len(data_files)}")
+        for file_path in data_files:
+            print(f"  {file_path}")
 
     elif args.command == "doctor":
-        print("Команда doctor выбрана")
+        # Запускаем проверку окружения
+        check_environment()
 
 
 if __name__ == "__main__":
