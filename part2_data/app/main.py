@@ -1,6 +1,7 @@
 import argparse
 import os
 import numpy as np
+import logging
 
 from dotenv import load_dotenv
 from .doctor import check_environment
@@ -8,6 +9,19 @@ from .data_processor import prepare_data
 
 # Загружаем переменные окружения из /.env
 load_dotenv()
+
+# Получаем уровень логирования из переменной окружения
+log_level = os.getenv(
+    "LOG_LEVEL",
+    "INFO",
+).upper()
+# Настройка логирования приложения
+logging.basicConfig(
+    level=getattr(logging, log_level, logging.INFO),
+    format="%(levelname)s: %(message)s",
+)
+# Создаём объект логгера
+logger = logging.getLogger(__name__)
 
 def parse_args():
     """Создаёт и обрабатывает аргументы командной строки."""
@@ -54,6 +68,7 @@ def parse_args():
         ),
         help="Путь к файлу .npy для сохранения результата",
     )
+
     # Команда doctor
     subparsers.add_parser("doctor",help="Проверка окружения")
     return parser.parse_args()
@@ -72,7 +87,13 @@ def main():
         print(f"Выходной файл: {args.output}")
         try:
             # Загружаем, нормализуем и объединяем данные
-            data, statistics = prepare_data(args.path,args.ext)
+            data, statistics = prepare_data(args.path, args.ext)
+            # Записываем информацию об успешной подготовке данных
+            logger.info(
+                "Подготовка завершена. "
+                "Обработано файлов: %s",
+                statistics["file_count"],
+            )
             # Создаём каталог для выходного файла
             output_dir = os.path.dirname(args.output)
 
@@ -101,7 +122,10 @@ def main():
             print(f"Файл сохранён: {args.output}")
 
         except (FileNotFoundError, ValueError) as error:
+            # Записываем ошибку в лог
+            logger.error("Ошибка подготовки данных: %s", error)
             print(f"Ошибка: {error}")
+            
     elif args.command == "doctor":
         # Запускаем проверку окружения
         check_environment()
