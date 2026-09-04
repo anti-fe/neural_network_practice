@@ -1,7 +1,19 @@
 {
     "files_processed": 3,
-    "sequential_time": 0.012986,
-    "multiprocessing_time": 0.256916,
-    "speedup": 0.050546,
-    "process_count": 4
+    "threaded_read_time": 0.010547,
+    "augmentation": {
+        "multiprocessing_time": 0.310513,
+        "process_count": 4
+    },
+    "cpu_benchmark": {
+        "samples": 100,
+        "array_shape": [
+            800,
+            800
+        ],
+        "sequential_time": 11.950778,
+        "multiprocessing_time": 3.020534,
+        "speedup": 3.956512,
+        "process_count": 4
+    }
 }

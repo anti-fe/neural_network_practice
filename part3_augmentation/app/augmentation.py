@@ -44,16 +44,38 @@ def process_augmentation(
     """
     Worker-функция для отдельного процесса.
 
-    Получает путь файла и его массив,
-    выполняет CPU-bound аугментацию
-    и возвращает результат.
+    Выполняет аугментацию и дополнительную CPU-bound
+    обработку, чтобы корректно сравнить
+    последовательное выполнение и multiprocessing.
     """
 
     # Разбираем входной объект на путь и данные
     file_path, data = item
-    # Выполняем аугментацию
+    # Выполняем основную аугментацию
     augmented = augment_data(data)
-    
+    # Создаём копию данных для CPU-bound вычислений
+    cpu_data = augmented.copy()
+
+    # Выполняем несколько математических операций над большим массивом
+    for _ in range(20):
+        # Вычисляем квадратный корень
+        cpu_data = np.sqrt(
+            cpu_data + 1e-6
+        )
+        # Выполняем возведение в степень
+        cpu_data = np.power(
+            cpu_data,
+            1.5,
+        )
+        # Вычисляем синус
+        cpu_data = np.sin(
+            cpu_data
+        )
+        # Вычисляем косинус
+        cpu_data = np.cos(
+            cpu_data
+        )
+
     return file_path, augmented
 
 if __name__ == "__main__":

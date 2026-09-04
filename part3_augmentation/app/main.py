@@ -10,8 +10,11 @@ from part3_augmentation.app.augmentation import (
     process_augmentation,
 )
 from part3_augmentation.app.performance import (
-    sequential_augment,
+    sequential_cpu_benchmark,
     save_performance_report,
+    create_benchmark_dataset,
+    sequential_cpu_benchmark,
+    multiprocessing_cpu_benchmark,
 )
 from part3_augmentation.app.consumers import FileConsumer
 from part3_augmentation.app.producer import FileProducer
@@ -190,21 +193,60 @@ def main():
     data, read_time, processed_count = threaded_read(
         data_path
     )
-    # Выполняем последовательную аугментацию для сравнения
-    sequential_data, sequential_time = sequential_augment(data)
-    print(
-        f"Время последовательной аугментации: "
-        f"{sequential_time:.6f} сек."
+    # Создаём увеличенный набор данных специально для CPU-bound тестирования
+    benchmark_data = create_benchmark_dataset(
+        data,
+        size=800,
     )
-    # Выполняем многопроцессорную аугментацию
-    augmented_data, augmentation_time = (
-        multiprocessing_augment(data)
+    # Выводим размер тестовых данных
+    print(
+        f"Размер benchmark-массивов: "
+        f"{benchmark_data[0][1].shape}"
+    )
+    # Выполняем обычную многопроцессорную аугментацию.
+    multiprocessing_data, multiprocessing_time = multiprocessing_augment(data)
+    print(
+        f"Время многопроцессорной аугментации: "
+        f"{multiprocessing_time:.6f} сек."
+    )
+    # Выводим информацию о benchmark-наборе
+    print("\n=== CPU Benchmark ===")
+    print(
+        f"Количество образцов: "
+        f"{len(benchmark_data)}"
+    )
+    print(
+        f"Размер одного образца: "
+        f"{benchmark_data[0][1].shape}"
+    )
+    print(
+        f"Количество процессов: "
+        f"{PROCESS_COUNT}"
+    )
+    # Выполняем CPU-bound обработку последовательно
+    benchmark_sequential_time = sequential_cpu_benchmark(
+        benchmark_data
+    )
+    print(
+        f"Последовательная обработка: "
+        f"{benchmark_sequential_time:.6f} сек."
+    )
+    # Выполняем CPU-bound обработку через multiprocessing
+    benchmark_multiprocessing_time = (
+        multiprocessing_cpu_benchmark(
+            benchmark_data,
+            PROCESS_COUNT,
+        )
+    )
+    print(
+        f"Многопроцессорная обработка: "
+        f"{benchmark_multiprocessing_time:.6f} сек."
     )
     # Объединяем результаты всех процессов
     final_data = np.concatenate(
         [
             result
-            for _, result in augmented_data
+            for _, result in multiprocessing_data
         ],
         axis=0,
     )
@@ -228,13 +270,17 @@ def main():
         "part3_augmentation/output/"
         "performance_report.json"
     )
-    # Сохраняем результаты сравнения
+   # Сохраняем полный отчёт производительности Part 3.
     save_performance_report(
         output_path=performance_path,
         files_processed=processed_count,
-        sequential_time=sequential_time,
-        multiprocessing_time=augmentation_time,
+        threaded_read_time=read_time,
+        multiprocessing_time=multiprocessing_time,
+        benchmark_sequential_time=benchmark_sequential_time,
+        benchmark_multiprocessing_time=benchmark_multiprocessing_time,
         process_count=PROCESS_COUNT,
+        benchmark_samples=len(benchmark_data),
+        benchmark_shape=benchmark_data[0][1].shape,
     )
     # Выводим итоговую статистику
     print("\n=== Part 3 ===")
@@ -247,16 +293,12 @@ def main():
         f"{read_time:.6f} сек."
     )
     print(
-        f"Время последовательной аугментации: "
-        f"{sequential_time:.6f} сек."
-    )
-    print(
         f"Количество процессов: "
         f"{PROCESS_COUNT}"
     )
     print(
         f"Время многопроцессорной аугментации: "
-        f"{augmentation_time:.6f} сек."
+        f"{multiprocessing_time:.6f} сек."
     )
     print(
         f"Размер итогового массива: "
