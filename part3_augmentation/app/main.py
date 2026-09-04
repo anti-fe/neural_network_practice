@@ -1,124 +1,279 @@
 import os
+import queue
+import threading
 import time
+from multiprocessing import Pool
+
 import numpy as np
 
-from part3_augmentation.app.augmentation import augment_data
+from part3_augmentation.app.augmentation import (
+    process_augmentation,
+)
+from part3_augmentation.app.performance import (
+    sequential_augment,
+    save_performance_report,
+)
+from part3_augmentation.app.consumers import FileConsumer
+from part3_augmentation.app.producer import FileProducer
 
-SUPPORTED_EXTENSIONS = {".csv"}
 
-def find_files(data_path: str) -> list[str]:
-    """
-    Рекурсивно ищет поддерживаемые файлы в каталоге
+# Количество потоков-потребителей
+CONSUMER_COUNT = 3
+# Количество процессов для аугментации
+PROCESS_COUNT = 4
 
-    Возвращает отсортированный список путей к найденным файлам
-    """
 
-    # Список найденных файлов
-    files = []
-    # Рекурсивно обходим указанный каталог
-    for root, _, filenames in os.walk(data_path):
-        for filename in filenames:
-            # Получаем расширение файла
-            _, extension = os.path.splitext(filename)
-            # Приводим расширение к нижнему регистру
-            extension = extension.lower()
-            # Добавляем только поддерживаемые файлы
-            if extension in SUPPORTED_EXTENSIONS:
-                files.append(
-                    os.path.join(root, filename)
-                )
-    return sorted(files)
-
-def load_csv(file_path: str) -> np.ndarray:
-    """
-    Загружает CSV-файл и возвращает нормализованный массив float32.
-    """
-
-    # Загружаем данные из CSV
-    data = np.loadtxt(
-        file_path,
-        delimiter=",",
-        dtype=np.float32,
-    )
-    # Находим минимальное и максимальное значения
-    min_value = data.min()
-    max_value = data.max()
-    # Выполняем min-max нормализацию, если значения различаются
-    if max_value != min_value:
-        data = (
-            data - min_value
-        ) / (
-            max_value - min_value
-        )
-    return data.astype(np.float32)
-
-def sequential_prepare(
+def threaded_read(
     data_path: str,
-) -> tuple[np.ndarray, float]:
+) -> tuple[list[tuple[str, np.ndarray]], float, int]:
     """
-    Последовательно загружает файлы и выполняет их аугментацию
+    Загружает файлы с помощью Producer-Consumer.
 
-    Возвращает итоговый массив и время обработки
+    Один Producer помещает пути файлов в очередь,
+    несколько Consumer загружают данные параллельно.
     """
 
-    # Время начала обработки
+    # Засекаем начало обработки
     start_time = time.perf_counter()
-    # Ищем файлы для обработки
-    files = find_files(data_path)
-    if not files:
-        raise FileNotFoundError(
-            "Подходящие файлы для обработки не найдены."
-        )
-    # Список результатов аугментации
-    results = []
-    for file_path in files:
-        # Загружаем CSV-файл
-        data = load_csv(file_path)
-        # Выполняем аугментацию
-        augmented = augment_data(data)
-        # Сохраняем результат обработки
-        results.append(augmented)
-        # Выводим информацию о текущем файле
-        print(f"Обработан файл: {file_path}")
+    # Создаём очередь с путями файлов
+    file_queue = queue.Queue()
+    # Создаём очередь с загруженными массивами
+    data_queue = queue.Queue()
+    # Создаём общий счётчик
+    counter = {
+        "processed": 0,
+    }
+    # Создаём блокировку счётчика
+    counter_lock = threading.Lock()
 
-    # Объединяем результаты всех файлов
-    final_data = np.concatenate(
-        results,
-        axis=0,
+    # Создаём Producer
+    producer = FileProducer(
+        data_path=data_path,
+        file_queue=file_queue,
     )
-    # Вычисляем время обработки
+
+    # Создаём список Consumer-потоков
+    consumers = []
+
+    # Создаём и запускаем Consumer-потоки
+    for consumer_id in range(
+        1,
+        CONSUMER_COUNT + 1,
+    ):
+        # Создаём очередной Consumer
+        consumer = FileConsumer(
+            consumer_id=consumer_id,
+            file_queue=file_queue,
+            data_queue=data_queue,
+            counter=counter,
+            counter_lock=counter_lock,
+        )
+        # Сохраняем поток в список
+        consumers.append(consumer)
+        # Запускаем поток
+        consumer.start()
+        
+    # Запускаем Producer
+    producer.start()
+    # Ожидаем завершения Producer
+    producer.join()
+    # Ожидаем обработки всех файлов
+    file_queue.join()
+    # Передаём Consumer сигналы завершения
+    for _ in consumers:
+        file_queue.put(None)
+    # Ожидаем обработки сигналов завершения
+    file_queue.join()
+    # Ожидаем завершения всех Consumer
+    for consumer in consumers:
+        consumer.join()
+    # Извлекаем данные из очереди
+    results = []
+    # Пока очередь содержит данные
+    while not data_queue.empty():
+        # Получаем очередной результат
+        results.append(
+            data_queue.get()
+        )
+    # Сортируем результаты по имени файла
+    results.sort(
+        key=lambda item: item[0]
+    )
+    # Вычисляем время работы потоков
     elapsed_time = (
-        time.perf_counter() - start_time
+        time.perf_counter()
+        - start_time
     )
-    # Возвращаем данные и время обработки
-    return final_data, elapsed_time
+
+    return (
+        results,
+        elapsed_time,
+        counter["processed"],
+    )
+
+def multiprocessing_augment(
+    data: list[tuple[str, np.ndarray]],
+) -> tuple[list[tuple[str, np.ndarray]], float]:
+    """
+    Выполняет аугментацию данных в нескольких процессах.
+
+    Для передачи результатов используется callback,
+    который вызывается после завершения каждого процесса.
+    """
+
+    # Засекаем начало процессной обработки.
+    start_time = time.perf_counter()
+
+    # Создаём список для результатов, полученных через callback.
+    results = []
+
+    # Создаём блокировку для безопасного добавления результатов.
+    results_lock = threading.Lock()
+
+    def collect_result(
+        result: tuple[str, np.ndarray],
+    ) -> None:
+        """
+        Callback-функция для получения результата процесса.
+        """
+
+        # Защищаем общий список результатов блокировкой
+        with results_lock:
+            # Добавляем результат в общий список
+            results.append(result)
+            # Получаем путь обработанного файла
+            file_path = result[0]
+            # Выводим информацию о полученном результате
+            print(
+                f"[Callback] Получен результат: "
+                f"{file_path}"
+            )
+    # Создаём пул из заданного количества процессов
+    with Pool(
+        processes=PROCESS_COUNT
+    ) as pool:
+        # Отправляем каждое задание в отдельный процесс
+        for item in data:
+            # Запускаем обработку
+            pool.apply_async(
+                process_augmentation,
+                args=(item,),
+                callback=collect_result,
+            )
+        # Запрещаем добавление новых задач в пул
+        pool.close()
+        # Ожидаем завершения всех процессов
+        pool.join()
+    # Сортируем результаты по имени исходного файла
+    results.sort(
+        key=lambda item: item[0]
+    )
+    # Вычисляем общее время аугментации
+    elapsed_time = (
+        time.perf_counter()
+        - start_time
+    )
+    return results, elapsed_time
+
 
 def main():
-    """Основная функция последовательной обработки."""
+    """Основная функция Part 3."""
 
-    # Путь к тестовым данным
+    # Указываем каталог с исходными данными
     data_path = "part3_augmentation/data"
-    # Выполняем последовательную подготовку данных
-    final_data, elapsed_time = sequential_prepare(
+    # Проверяем наличие каталога
+    if not os.path.isdir(data_path):
+        raise FileNotFoundError(
+            f"Каталог не найден: {data_path}"
+        )
+    # Получаем данные через Producer-Consumer
+    data, read_time, processed_count = threaded_read(
         data_path
     )
-    # Создаём каталог для результата, если его нет
+    # Выполняем последовательную аугментацию для сравнения
+    sequential_data, sequential_time = sequential_augment(data)
+    print(
+        f"Время последовательной аугментации: "
+        f"{sequential_time:.6f} сек."
+    )
+    # Выполняем многопроцессорную аугментацию
+    augmented_data, augmentation_time = (
+        multiprocessing_augment(data)
+    )
+    # Объединяем результаты всех процессов
+    final_data = np.concatenate(
+        [
+            result
+            for _, result in augmented_data
+        ],
+        axis=0,
+    )
+    # Создаём каталог результатов
     os.makedirs(
         "part3_augmentation/output",
         exist_ok=True,
     )
-    # Путь к итоговому файлу
+    # Указываем путь к результату
     output_path = (
-        "part3_augmentation/output/sequential.npy"
+        "part3_augmentation/output/"
+        "multiprocessing.npy"
     )
-    # Сохраняем результат
-    np.save(output_path, final_data)
-    # Выводим итоговую информацию
-    print("\n=== Последовательная обработка ===")
-    print(f"Размер результата: {final_data.shape}")
-    print(f"Тип данных: {final_data.dtype}")
-    print(f"Время обработки: {elapsed_time:.6f} сек.")
-    print(f"Файл сохранён: {output_path}")
+    # Сохраняем расширенный набор данных
+    np.save(
+        output_path,
+        final_data,
+    )
+    # Формируем путь к отчёту производительности
+    performance_path = (
+        "part3_augmentation/output/"
+        "performance_report.json"
+    )
+    # Сохраняем результаты сравнения
+    save_performance_report(
+        output_path=performance_path,
+        files_processed=processed_count,
+        sequential_time=sequential_time,
+        multiprocessing_time=augmentation_time,
+        process_count=PROCESS_COUNT,
+    )
+    # Выводим итоговую статистику
+    print("\n=== Part 3 ===")
+    print(
+        f"Обработано файлов: "
+        f"{processed_count}"
+    )
+    print(
+        f"Время многопоточного чтения: "
+        f"{read_time:.6f} сек."
+    )
+    print(
+        f"Время последовательной аугментации: "
+        f"{sequential_time:.6f} сек."
+    )
+    print(
+        f"Количество процессов: "
+        f"{PROCESS_COUNT}"
+    )
+    print(
+        f"Время многопроцессорной аугментации: "
+        f"{augmentation_time:.6f} сек."
+    )
+    print(
+        f"Размер итогового массива: "
+        f"{final_data.shape}"
+    )
+    print(
+        f"Тип данных: "
+        f"{final_data.dtype}"
+    )
+    print(
+        f"Файл сохранён: "
+        f"{output_path}"
+    )
+    print(
+        f"Отчёт производительности: "
+        f"{performance_path}"
+    )
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,7 @@
+{
+    "files_processed": 3,
+    "sequential_time": 0.012986,
+    "multiprocessing_time": 0.256916,
+    "speedup": 0.050546,
+    "process_count": 4
+}

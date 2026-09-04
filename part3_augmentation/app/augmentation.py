@@ -38,6 +38,23 @@ def augment_data(data: np.ndarray) -> np.ndarray:
         augmented_data,
         dtype=np.float32,
     )
+def process_augmentation(
+    item: tuple[str, np.ndarray],
+) -> tuple[str, np.ndarray]:
+    """
+    Worker-функция для отдельного процесса.
+
+    Получает путь файла и его массив,
+    выполняет CPU-bound аугментацию
+    и возвращает результат.
+    """
+
+    # Разбираем входной объект на путь и данные
+    file_path, data = item
+    # Выполняем аугментацию
+    augmented = augment_data(data)
+    
+    return file_path, augmented
 
 if __name__ == "__main__":
     # Создаём тестовое изображение размером 3 × 3.
