@@ -24,9 +24,13 @@ part1_mlp/weights/*
 # Keep the weights directory in Git
 !part1_mlp/weights/.gitkeep
 
-# Local datasets
-# Раскомментируй, если датасеты не должны храниться в Git
-# part1_mlp/data/*
+# Generated NumPy files from Part 2
+part2_data/output/*.npy
+# Temporary/generated files.
+part2_data/output/*.tmp
+
+# Игнорируем только большие/генерируемые массивы
+part3_augmentation/output/*.npy
 
 # OS files
 .DS_Store
