@@ -58,17 +58,15 @@ def load_image(file_path):
     # Импортируем Pillow только при работе с изображениями
     from PIL import Image
 
-    # Открываем изображение.
+    # Открываем изображение
     with Image.open(file_path) as image:
         # Преобразуем изображение в RGB
         image = image.convert("RGB")
-
         # Преобразуем изображение в NumPy-массив
         data = np.asarray(
             image,
             dtype=np.float32,
         )
-
     # Нормализуем значения пикселей от 0 до 1
     return data / 255.0
 
@@ -96,7 +94,6 @@ def load_file(file_path):
     raise ValueError(
         f"Неподдерживаемый формат файла: {file_path}"
     )
-
 
 def normalize_csv(data):
     """Нормализует числовые данные CSV"""
@@ -181,20 +178,17 @@ def prepare_data(data_path, extensions):
         data = data.reshape(-1)
         # Добавляем в общий список
         arrays.append(data)
-
     # Находим максимальное количество элементов среди файлов
     max_size = max(
         array.size
         for array in arrays
     )
-    # Создаём список массивов одинаковой длины.
+    # Создаём список массивов одинаковой длины
     unified_arrays = []
-
     # Приводим каждый образец к одинаковому размеру
     for array in arrays:
         # Вычисляем, сколько элементов необходимо добавить
         padding_size = max_size - array.size
-
         # Добавляем нулевые значения справа
         padded_array = np.pad(
             array,
@@ -207,12 +201,10 @@ def prepare_data(data_path, extensions):
             padded_array.astype(np.float32)
         )
     # Объединяем все образцы в двумерный массив
-    combined = np.vstack(
-        unified_arrays
-    ).astype(np.float32)
+    combined = np.vstack(unified_arrays).astype(np.float32)
     # Вычисляем время обработки
     elapsed_time = time.perf_counter() - start_time
-
+    
     # Формируем статистику
     statistics = {
         "file_count": len(files),

@@ -5,14 +5,14 @@ import sys
 
 
 def check_python():
-    """Проверяет версию Python."""
+    """Проверяет версию Python"""
     # Получаем текущую версию Python
     version = sys.version.split()[0]
     # Выводим версию Python
     print(f"Python: {version}")
 
 def check_library(module_name, package_name=None):
-    """Проверяет наличие Python-библиотеки."""
+    """Проверяет наличие Python-библиотеки"""
     # Если имя пакета не передано, используем имя модуля
     if package_name is None:
         package_name = module_name
@@ -27,7 +27,7 @@ def check_library(module_name, package_name=None):
         print(f"{package_name}: НЕ УСТАНОВЛЕНА")
 
 def check_cuda():
-    """Проверяет доступность NVIDIA CUDA через nvidia-smi."""
+    """Проверяет доступность NVIDIA CUDA через nvidia-smi"""
     print("CUDA / NVIDIA:")
     try:
         # Запускаем внешнюю команду nvidia-smi
@@ -37,7 +37,6 @@ def check_cuda():
             text=True,
             timeout=10,
         )
-
         # Проверяем код завершения команды
         if result.returncode == 0:
             print("nvidia-smi: OK")
@@ -45,7 +44,6 @@ def check_cuda():
             lines = result.stdout.splitlines()
             for line in lines[:5]:
                 print(f"  {line}")
-
         else:
             print("nvidia-smi: недоступен")
 
@@ -62,7 +60,7 @@ def check_working_directory():
     print(f"Рабочая директория: {current_directory}")
 
 def check_environment():
-    """Выполняет полную проверку окружения."""
+    """Выполняет полную проверку окружения"""
     # Выводим заголовок диагностики
     print("=== Проверка окружения ===")
     # Проверяем версию Python
