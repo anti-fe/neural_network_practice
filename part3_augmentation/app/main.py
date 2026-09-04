@@ -48,16 +48,13 @@ def threaded_read(
     }
     # Создаём блокировку счётчика
     counter_lock = threading.Lock()
-
     # Создаём Producer
     producer = FileProducer(
         data_path=data_path,
         file_queue=file_queue,
     )
-
     # Создаём список Consumer-потоков
     consumers = []
-
     # Создаём и запускаем Consumer-потоки
     for consumer_id in range(
         1,
@@ -126,10 +123,8 @@ def multiprocessing_augment(
 
     # Засекаем начало процессной обработки.
     start_time = time.perf_counter()
-
     # Создаём список для результатов, полученных через callback.
     results = []
-
     # Создаём блокировку для безопасного добавления результатов.
     results_lock = threading.Lock()
 
@@ -270,7 +265,7 @@ def main():
         "part3_augmentation/output/"
         "performance_report.json"
     )
-   # Сохраняем полный отчёт производительности Part 3.
+   # Сохраняем полный отчёт производительности Part 3
     save_performance_report(
         output_path=performance_path,
         files_processed=processed_count,

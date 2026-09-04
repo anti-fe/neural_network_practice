@@ -24,10 +24,8 @@ class FileProducer(threading.Thread):
         self.data_path = data_path
         # Сохраняем очередь для передачи файлов потребителям
         self.file_queue = file_queue
-
     def run(self) -> None:
         """Сканирует каталог и добавляет найденные файлы в очередь."""
-
         # Выводим информацию о начале работы Producer
         print(
             f"[Producer] Начало сканирования: "
