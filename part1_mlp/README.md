@@ -40,7 +40,8 @@ neural_network_practice/
 │       └── .gitkeep
 │
 ├── .gitignore
-└── README.md
+├── .env
+└── requirements.txt
 
 
 Требования: 
@@ -54,7 +55,7 @@ neural_network_practice/
 
 1. Установить зависимости:
 # Устанавливаем NumPy и Pandas.
-python -m pip install numpy pandas 
+python -m pip install -r requirements.txt
 
 2. Запуск проекта с параметрами по умолчанию:
 # Запускаем основную программу.
