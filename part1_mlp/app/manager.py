@@ -6,7 +6,6 @@ import os
 from part1_mlp.app.exceptions import (
     DatasetFileNotFoundError,
     DatasetError,
-    MismatchedDataError,
 )
 from part1_mlp.app.utils import validate_test_size, validate_data
 
@@ -92,7 +91,6 @@ class DatasetManager:
 
         # Возвращаем четыре части датасета
         return x_train, x_test, y_train, y_test
-    
     def to_one_hot(self, y, num_classes=None):
             """Метод, который преобразует номера классов в формат, который понимает наша нейросеть"""
             # Преобразуем входные классы в целочисленный NumPy-массив

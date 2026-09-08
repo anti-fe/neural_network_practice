@@ -173,7 +173,7 @@ def prepare_data(data_path, extensions):
             }
         )
         # Нормализуем данные
-        data = normalize_data(data,file_path)
+        data = normalize_data(data, file_path)
         # Преобразуем данные в одномерный вектор
         data = data.reshape(-1)
         # Добавляем в общий список

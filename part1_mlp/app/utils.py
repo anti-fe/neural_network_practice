@@ -55,10 +55,3 @@ def validate_test_size(test_size):
         raise InvalidInputError(
             "test_size должен находиться между 0 и 1"
         )
-def validate_data(x, y):
-    """Функция для проверки корректности входных данных"""
-    # Проверяем, что количество объектов X и Y совпадает
-    if len(x) != len(y):
-        raise MismatchedDataError(
-            "x и y должны содержать одно и то же количество образцов"
-        )

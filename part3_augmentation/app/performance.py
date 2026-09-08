@@ -2,9 +2,6 @@ import json
 import time
 from typing import Any
 import numpy as np
-from part3_augmentation.app.augmentation import (
-    augment_data,
-)
 
 def sequential_cpu_benchmark(
     data: list[tuple[str, np.ndarray]],

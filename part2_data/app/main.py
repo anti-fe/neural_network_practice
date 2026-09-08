@@ -70,7 +70,7 @@ def parse_args():
     )
 
     # Команда doctor
-    subparsers.add_parser("doctor",help="Проверка окружения")
+    subparsers.add_parser("doctor", help="Проверка окружения")
     return parser.parse_args()
 
 
@@ -101,7 +101,7 @@ def main():
                 # Создаём каталог, если его ещё нет
                 os.makedirs(output_dir, exist_ok=True)
             # Сохраняем итоговый массив
-            np.save(args.output,data)
+            np.save(args.output, data)
 
             # Выводим статистику обработки
             print("\nПодготовка завершена")

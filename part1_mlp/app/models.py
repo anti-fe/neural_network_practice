@@ -3,7 +3,6 @@ import os
 
 from part1_mlp.app.exceptions import (
     InvalidLayerSizeError,
-    MismatchedDataError,
     ModelNotInitializedError,
     WeightFileError,
 )

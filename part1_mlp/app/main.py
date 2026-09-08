@@ -1,5 +1,4 @@
 import os
-import argparse
 
 from part1_mlp.app.manager import DatasetManager
 from part1_mlp.app.models import NeuralNetwork
@@ -147,7 +146,7 @@ def main():
                     batch_size=batch_size,
                 )
 
-                print( f"Loss before: {loss_history[0]}")
+                print(f"Loss before: {loss_history[0]}")
                 print(f"Loss after: {loss_history[-1]}")
 
                 print("Обучение завершено.")
@@ -168,7 +167,7 @@ def main():
                 predictions = network.predict(x)
 
                 # Вычисляем точность
-                accuracy = network.evaluate(x,y)
+                accuracy = network.evaluate(x, y)
 
                 print(f"Predictions: {predictions}")
                 print(f"Accuracy: {accuracy * 100:.2f}%")

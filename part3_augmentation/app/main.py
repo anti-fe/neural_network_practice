@@ -13,7 +13,6 @@ from part3_augmentation.app.performance import (
     sequential_cpu_benchmark,
     save_performance_report,
     create_benchmark_dataset,
-    sequential_cpu_benchmark,
     multiprocessing_cpu_benchmark,
 )
 from part3_augmentation.app.consumers import FileConsumer
